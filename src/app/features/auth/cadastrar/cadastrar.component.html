@@ -1,0 +1,18 @@
+<div class="flex justify-content-center align-items-center" style="min-height: 85vh;">
+    <p-card header="Cadastrar" styleClass="w-full md:w-4 shadow-2">
+    <div class="flex flex-column gap-2">
+        <label>Nome</label>
+        <input pInputText [(ngModel)]="model.nome" />
+
+        <label>Email</label>
+        <input pInputText [(ngModel)]="model.email" />
+
+        <label>Senha</label>
+        <input pInputText type="password" [(ngModel)]="model.senha" />
+
+        <button pButton label="Criar conta" icon="pi pi-check" (click)="cadastrarUsuario()"></button>
+
+        <a routerLink="/login" class="mt-3">Já tenho conta</a>
+    </div>
+    </p-card>
+</div>

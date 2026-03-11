@@ -1,0 +1,189 @@
+<div class="conversa-page">  
+    <div class="conversa-wrapper">
+    <div class="grid" style="min-height: 85vh;">
+
+      <!-- =================== ESQUERDA: lista de conversas =================== -->
+      <div class="col-12 md:col-4 painel-esquerdo">
+        <p-card header="Conversas" styleClass="shadow-1 h-full painel-esquerdo-card">
+
+          <!-- Botão nova conversa -->
+          <div class="mb-3">
+            <button
+              pButton
+              icon="pi pi-plus"
+              label="Iniciar Conversa"
+              class="p-button-outlined w-full"
+              (click)="abrirDialogNovaConversa()"
+            ></button>
+          </div>
+
+          <!-- Lista de conversas -->
+          @if (conversas().length > 0) {
+            <p-listbox
+              [options]="conversas()"
+              [ngModel]="conversaIdSelecionada()"
+              (ngModelChange)="selecionarConversa($event)"
+              optionLabel="titulo"
+            >
+              <ng-template pTemplate="item" let-item>
+                <div class="flex align-items-center justify-content-between gap-2 w-full">
+                  <div class="flex align-items-center gap-2">
+                    @if (item.fotoUrl; as foto) {
+                      <p-avatar [image]="foto" shape="circle"></p-avatar>
+                    } @else {
+                      <p-avatar icon="pi pi-user" shape="circle"></p-avatar>
+                    }
+                    <div class="flex flex-column">
+                      @if (item.participanteAUId === usuarioLogado.uId) {
+                        <small class="opacity-70">{{ item.participanteBNome }}</small>
+                      } @else {
+                        <small class="opacity-70">{{ item.participanteANome }}</small>
+                      }
+                      <strong>{{ item.titulo }}</strong>
+                      <small class="opacity-70">{{ item.ultimaMensagem || 'Sem mensagens' }}</small>
+                    </div>
+                  </div>
+                  <small class="opacity-60">
+                    {{ $any(item.ultimaMensagemEm)?.toDate?.() ? ($any(item.ultimaMensagemEm).toDate() | date:'HH:mm') : '' }}
+                  </small>
+                </div>
+              </ng-template>
+            </p-listbox>
+          } @else {
+            <p class="m-0 mt-3 opacity-70 text-center">Nenhuma conversa ainda.</p>
+          }
+
+          <p-divider></p-divider>
+        </p-card>
+      </div>
+
+      <!-- =================== DIREITA: mensagens =================== -->
+      <div class="col-12 md:col-8">
+        <p-card styleClass="shadow-1 h-full">
+
+          <!-- Cabeçalho: nome do destinatário -->
+          <ng-template pTemplate="header">
+            <div class="chat-header">
+              @if (usuarioDestinatario(); as destinatario) {
+                <div class="flex align-items-center gap-2">
+                  @if (destinatario.fotoUrl) {
+                    <p-avatar [image]="destinatario.fotoUrl" shape="circle"></p-avatar>
+                  } @else {
+                    <p-avatar icon="pi pi-user" shape="circle"></p-avatar>
+                  }
+                  <div class="flex flex-column">
+                    <strong>{{ destinatario.nome }}</strong>
+                    <small class="opacity-70">{{ destinatario.email }}</small>
+                  </div>
+                </div>
+              } @else {
+                <div class="flex flex-column">
+                  <strong>Conversa</strong>
+                  <small class="opacity-70">Selecione ou inicie uma conversa para começar</small>
+                </div>
+              }
+            </div>
+          </ng-template>
+
+          <!-- Área de mensagens -->
+          @if (usuarioDestinatario()) {
+
+            <div class="mensagens">
+              @if (mensagens().length === 0) {
+                <div class="flex align-items-center justify-content-center h-full">
+                  <p class="opacity-60">Nenhuma mensagem ainda. Diga olá! 👋</p>
+                </div>
+              }
+              @for (m of mensagens(); track $index) {
+                <div class="linha" [class.eu]="$any(m).remetenteUid === usuarioLogado.uId">
+                  <div class="bolha">
+                    {{ m.texto }}
+                    <div class="hora">
+                      {{ $any(m).criadoEm?.toDate?.() ? ($any(m).criadoEm.toDate() | date:'HH:mm') : '' }}
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <p-divider></p-divider>
+
+            <!-- Campo de envio -->
+            <div class="flex gap-2">
+              <input
+                pInputText
+                class="w-full"
+                placeholder="Digite uma mensagem..."
+                [(ngModel)]="texto"
+                (keyup.enter)="enviar()"
+              />
+              <button
+                pButton
+                icon="pi pi-send"
+                (click)="enviar()"
+                [disabled]="!texto.trim()"
+              ></button>
+            </div>
+
+          } @else {
+            <div class="flex flex-column align-items-center justify-content-center vazio">
+              <i class="pi pi-comments icone-vazio"></i>
+              <p class="opacity-70 mt-3">Selecione ou inicie uma conversa para ver as mensagens.</p>
+            </div>
+          }
+
+        </p-card>
+      </div>
+    </div>
+
+    <!-- =================== DIALOG: Nova conversa =================== -->
+    <p-dialog
+      [(visible)]="exibirNovaConversa"
+      header="Nova conversa"
+      [modal]="true"
+      [style]="{ width: '480px' }"
+    >
+      <p-listbox
+        [options]="usuarios()"
+        [(ngModel)]="usuarioDestinatario"
+        optionLabel="nome"
+        [style]="{ 'max-height': '280px', 'overflow-y': 'auto' }"
+      >
+        <ng-template pTemplate="item" let-u>
+          <div class="flex align-items-center gap-3 py-1">
+            @if (u.fotoUrl; as foto) {
+              <p-avatar [image]="foto" shape="circle"></p-avatar>
+            } @else {
+              <p-avatar icon="pi pi-user" shape="circle"></p-avatar>
+            }
+            <div class="flex flex-column">
+              <strong>{{ u.nome }}</strong>
+              <small class="opacity-70">{{ u.email }}</small>
+            </div>
+          </div>
+        </ng-template>
+      </p-listbox>
+
+      @if (usuarios().length === 0) {
+        <p class="m-0 mt-2 opacity-60">Nenhum usuário encontrado.</p>
+      }
+
+      <ng-template pTemplate="footer">
+        <button
+          pButton
+          label="Cancelar"
+          class="p-button-text"
+          (click)="fecharDialogNovaConversa()"
+        ></button>
+        <button
+          pButton
+          label="Abrir"
+          icon="pi pi-check"
+          (click)="abrirConversa()"
+          [disabled]="!usuarioDestinatario()"
+        ></button>
+      </ng-template>
+    </p-dialog>
+
+  </div>
+</div>

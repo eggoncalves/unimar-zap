@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function autenticado() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+
+    function ehParticipante(conversaId) {
+      return autenticado()
+        && (
+          uid() == get(/databases/$(database)/documents/conversas/$(conversaId)).data.participanteAUId
+          || uid() == get(/databases/$(database)/documents/conversas/$(conversaId)).data.participanteBUId
+        );
+    }
+
+    match /usuarios/{userId} {
+      allow read, write: if autenticado() && uid() == userId;
+
+      match /dispositivos/{tokenId} {
+        allow read, write: if autenticado() && uid() == userId;
+      }
+    }
+
+    match /conversas/{conversaId} {
+      allow create: if autenticado()
+        && request.resource.data.uId == conversaId
+        && request.resource.data.participanteAUId is string
+        && request.resource.data.participanteBUId is string
+        && request.resource.data.participanteANome is string
+        && request.resource.data.participanteBNome is string
+        && request.resource.data.criadoEm is timestamp
+        && request.resource.data.participanteAUId != request.resource.data.participanteBUId
+        && (
+          uid() == request.resource.data.participanteAUId
+          || uid() == request.resource.data.participanteBUId
+        );
+
+      allow read, update: if ehParticipante(conversaId);
+      allow delete: if false;
+
+      match /mensagens/{mensagemId} {
+        allow read: if ehParticipante(conversaId);
+
+        allow create: if ehParticipante(conversaId)
+          && request.resource.data.remetenteUid == uid()
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() <= 1000
+          && request.resource.data.criadoEm is timestamp;
+
+        allow update, delete: if false;
+      }
+    }
+  }
+}

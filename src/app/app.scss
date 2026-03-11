@@ -1,0 +1,43 @@
+:host {
+	display: block;
+}
+
+:host ::ng-deep .p-toolbar {
+	margin-bottom: 1rem;
+}
+
+:host router-outlet + * {
+	display: block;
+	padding: 0 1rem 1rem;
+}
+
+@media (max-width: 768px) {
+	:host ::ng-deep .p-toolbar {
+		margin-bottom: 0.75rem;
+	}
+
+	:host .usuario-info {
+		max-width: 11rem;
+	}
+
+	:host .usuario-email {
+		display: block;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	:host ::ng-deep .p-toolbar .p-toolbar-start,
+	:host ::ng-deep .p-toolbar .p-toolbar-end {
+		width: 100%;
+	}
+
+	:host ::ng-deep .p-toolbar .p-toolbar-end {
+		justify-content: flex-end;
+	}
+
+	:host router-outlet + * {
+		padding: 0 0.75rem 0.75rem;
+	}
+}
